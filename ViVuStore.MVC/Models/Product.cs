@@ -27,4 +27,6 @@ public class Product : BaseEntity
     public Guid SupplierId { get; set; }
 
     public virtual Supplier? Supplier { get; set; }
+
+    public virtual ICollection<OrderDetail> OrderDetails { get; set; } = [];
 }
