@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ViVuStore.MVC.Models;
 
@@ -10,4 +11,6 @@ public class Category : BaseEntity
 
     [StringLength(500)]
     public string? Description { get; set; }
+
+    public virtual ICollection<Product> Products { get; set; } = [];
 }

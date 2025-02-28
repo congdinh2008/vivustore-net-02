@@ -4,7 +4,7 @@
 
 ### Add a migration
 ```bash
-dotnet ef migrations add AddSupplierAndCategory --project ViVuStore.MVC --startup-project ViVuStore.MVC --context ViVuStoreDbContext --output-dir Migrations
+dotnet ef migrations add AddProductModel --project ViVuStore.MVC --startup-project ViVuStore.MVC --context ViVuStoreDbContext --output-dir Migrations
 dotnet ef migrations add [MigrationName] --project ViVuStore.MVC --startup-project ViVuStore.MVC --context ViVuStoreDbContext --output-dir Migrations
 dotnet ef migrations add [MigrationName] --project ViVuStore.Data --startup-project ViVuStore.MVC --context StorageDbContext --output-dir Migrations/Storage
 ```
@@ -29,7 +29,7 @@ dotnet ef database drop --project ViVuStore.Data --startup-project ViVuStore.MVC
 
 ### Remove a migration
 ```bash
-dotnet ef migrations remove --project ViVuStore.Data --startup-project ViVuStore.MVC --context ViVuStoreDbContext
+dotnet ef migrations remove --project ViVuStore.MVC --startup-project ViVuStore.MVC --context ViVuStoreDbContext
 dotnet ef migrations remove --project ViVuStore.Data --startup-project ViVuStore.MVC --context StorageDbContext
 ```
 
