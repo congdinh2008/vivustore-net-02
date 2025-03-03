@@ -87,7 +87,8 @@ public class Repository<T>: IRepository<T> where T : class
         return _dbSet.AsQueryable();
     }
 
-    public virtual IQueryable<T> GetQuery(Expression<Func<T, bool>> where)
+    public virtual IQueryable<T> GetQuery(
+        Expression<Func<T, bool>> where)
     {
         IQueryable<T> query = _dbSet;
 
@@ -99,7 +100,9 @@ public class Repository<T>: IRepository<T> where T : class
         return query;
     }
 
-    public virtual async Task<IEnumerable<T>> GetByPageAsync(Expression<Func<T, bool>> condition, int size, int page)
+    public virtual async Task<IEnumerable<T>> GetByPageAsync(
+        Expression<Func<T, bool>> condition, 
+        int size, int page)
     {
         return await _dbSet.Where(condition).Skip(size * (page - 1)).Take(size).ToListAsync();
     }

@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using ViVuStore.MVC.Data;
 using ViVuStore.MVC.Repositories;
+using ViVuStore.MVC.Services;
+using ViVuStore.MVC.Services.BaseServices;
 using ViVuStore.MVC.UnitOfWork;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,10 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 
 // Register UnitOfWork - DI
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Register Services - DI
+builder.Services.AddScoped(typeof(IBaseService<>), typeof(BaseService<>));
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 var app = builder.Build();
 
@@ -43,4 +49,4 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 
-app.Run();
+await app.RunAsync();

@@ -38,6 +38,10 @@ public class UnitOfWork : IUnitOfWork
 
     public IRepository<OrderDetail> OrderDetailRepository => _orderDetailRepository ??= new Repository<OrderDetail>(_context);
 
+    public IGenericRepository<T> GenericRepository<T>() where T : BaseEntity => new GenericRepository<T>(_context);
+
+    public IRepository<T> Repository<T>() where T : class => new Repository<T>(_context);
+
     public async Task<int> SaveChangesAsync()
     {
         BeforeSaveChanges();
@@ -53,7 +57,7 @@ public class UnitOfWork : IUnitOfWork
     private void BeforeSaveChanges()
     {
         var entities = _context.ChangeTracker.Entries().Where(x => x.Entity is BaseEntity && (x.State == EntityState.Added || x.State == EntityState.Modified));
-        
+
         foreach (var entity in entities)
         {
             var baseEntity = (BaseEntity)entity.Entity;

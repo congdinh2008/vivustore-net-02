@@ -1,31 +1,28 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using ViVuStore.MVC.Data;
 using ViVuStore.MVC.Models;
-using ViVuStore.MVC.Repositories;
-using ViVuStore.MVC.UnitOfWork;
+using ViVuStore.MVC.Services;
 
 namespace ViVuStore.MVC.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork)
+    private readonly ICategoryService _categoryService;
+    public HomeController(ICategoryService categoryService)
     {
-        _logger = logger;
-        _unitOfWork = unitOfWork;
+        _categoryService = categoryService;
     }
 
     public IActionResult Index()
     {
-        _unitOfWork.CategoryRepository.Add(new Category
+        int result = _categoryService.Add(new Category
         {
-            Name = "Test Category",
-            Description = "Test Description"
+            Name = "Fashion",
+            Description = "This is fashion category",
         });
-        _unitOfWork.SaveChanges();
+
+        ViewBag.Message = result > 0 ? "Success" : "Failed";
+
         return View();
     }
 

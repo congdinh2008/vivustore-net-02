@@ -18,6 +18,10 @@ public interface IUnitOfWork : IDisposable
 
     IRepository<OrderDetail> OrderDetailRepository { get; }
 
+    IGenericRepository<T> GenericRepository<T>() where T : BaseEntity;
+
+    IRepository<T> Repository<T>() where T : class;
+
     Task<int> SaveChangesAsync();
 
     int SaveChanges();
