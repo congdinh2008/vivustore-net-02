@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ViVuStore.MVC.Data;
+using ViVuStore.MVC.Repositories;
+using ViVuStore.MVC.UnitOfWork;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,12 @@ builder.Services.AddDbContext<ViVuStoreDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("ViVuStoreDbConnection"));
 });
+
+// Register GenericRepository - DI
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+// Register UnitOfWork - DI
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 
