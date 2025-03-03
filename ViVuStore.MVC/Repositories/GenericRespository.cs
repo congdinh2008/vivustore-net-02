@@ -1,58 +1,184 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using ViVuStore.MVC.Data;
 using ViVuStore.MVC.Models;
 
 namespace ViVuStore.MVC.Repositories;
 
-public class GenericRespository<T> : IGenericRepository<T> where T : BaseEntity
+public class GenericRepository<T> : IGenericRepository<T> where T : class, IBaseEntity
 {
-    protected readonly ViVuStoreDbContext _context;
+    #region Protected Fields
 
+    protected readonly ViVuStoreDbContext _context;
     private readonly DbSet<T> _dbSet;
-    public GenericRespository(ViVuStoreDbContext context)
+
+    #endregion
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RepositoryBase{T, TDbContext}"/> class.
+    /// </summary>
+    /// <param name="context">The data context.</param>
+    public GenericRepository(ViVuStoreDbContext context)
     {
         _context = context;
-        _dbSet = _context.Set<T>();
+
+        // Find Property with typeof(T) on dataContext
+        var typeOfDbSet = typeof(DbSet<T>);
+
+        foreach (var prop in context.GetType().GetProperties())
+        {
+            if (typeOfDbSet == prop.PropertyType)
+            {
+                if (prop.GetValue(context, null) is DbSet<T> value)
+                {
+                    _dbSet = value;
+                }
+                break;
+            }
+        }
+
+        _dbSet ??= context.Set<T>();
     }
 
-    public void Add(T entity)
+    #region Public Methods
+
+    #region Create, Update, Delete
+    public virtual void Add(T entity)
     {
         _dbSet.Add(entity);
     }
 
-    public async Task AddAsync(T entity)
+    public virtual void Add(IEnumerable<T> entities)
     {
-        await _dbSet.AddAsync(entity);
+        _dbSet.AddRange(entities);
     }
 
-    public void Delete(Guid id)
+    public virtual void Update(T entity)
     {
-        var existingEntity = GetById(id) ?? throw new InvalidOperationException($"{typeof(T).Name} not found");
-        _dbSet.Remove(existingEntity);
+        _dbSet.Update(entity);
     }
 
-    public IEnumerable<T> GetAll()
+    public virtual void Update(IEnumerable<T> entities)
     {
-        return [.. _dbSet];
+        _dbSet.UpdateRange(entities);
     }
+
+    public virtual void Delete(T entity, bool isHardDelete = false)
+    {
+        if (isHardDelete)
+        {
+            _dbSet.Remove(entity);
+        }
+        else
+        {
+            entity.DeletedAt = DateTime.Now;
+            _dbSet.Update(entity);
+        }
+    }
+
+    public virtual void Delete(Guid id, bool isHardDelete = false)
+    {
+        var entity = _dbSet.Find(id);
+        if (entity != null)
+        {
+            Delete(entity, isHardDelete);
+        }
+    }
+
+    public virtual void Delete(IEnumerable<T> entities, bool isHardDelete = false)
+    {
+        if (isHardDelete)
+        {
+            _dbSet.RemoveRange(entities);
+        }
+        else
+        {
+            foreach (var entity in entities)
+            {
+                entity.DeletedAt = DateTime.Now;
+                _dbSet.Update(entity);
+            }
+        }
+    }
+
+    public virtual void Delete(Expression<Func<T, bool>> where, bool isHardDelete = false)
+    {
+        var entities = _dbSet.Where(where).ToList();
+        Delete(entities, isHardDelete);
+    }
+
+    #endregion
+
+    #region Get and Search
 
     public async Task<IEnumerable<T>> GetAllAsync()
     {
         return await _dbSet.ToListAsync();
     }
 
-    public T? GetById(Guid id)
+    public virtual T? GetById(Guid id)
     {
+
         return _dbSet.Find(id);
     }
 
-    public async Task<T?> GetByIdAsync(Guid id)
+    public virtual async Task<T?> GetByIdAsync(Guid id)
     {
         return await _dbSet.FindAsync(id);
     }
 
-    public void Update(T entity)
+    public IQueryable<T> GetQuery()
     {
-        _dbSet.Update(entity);
+        return _dbSet.AsQueryable();
     }
+
+    public virtual IQueryable<T> GetQuery(Expression<Func<T, bool>> where)
+    {
+        IQueryable<T> query = _dbSet;
+
+        if (where != null)
+        {
+            query = query.Where(where);
+        }
+
+        return query;
+    }
+
+    public virtual async Task<IEnumerable<T>> GetByPageAsync(Expression<Func<T, bool>> condition, int size, int page)
+    {
+        return await _dbSet.Where(condition).Skip(size * (page - 1)).Take(size).ToListAsync();
+    }
+
+    public virtual IQueryable<T> Get(
+        Expression<Func<T, bool>>? filter = null,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        string includeProperties = "",
+        bool canLoadDeleted = false)
+    {
+        IQueryable<T> query = _dbSet;
+
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+
+        if (!canLoadDeleted)
+        {
+            query = query.Where(x => x.DeletedAt == null);
+        }
+
+        if (!string.IsNullOrWhiteSpace(includeProperties))
+        {
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty);
+            }
+        }
+
+        return orderBy != null ? orderBy(query) : query;
+    }
+
+    #endregion
+
+    #endregion
 }
